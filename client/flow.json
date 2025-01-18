@@ -1,0 +1,141 @@
+{
+    "name": "AdVise ART Workflow",
+    "nodes": [
+      {
+        "id": "start",
+        "type": "input",
+        "label": "Start Node",
+        "description": "Trigger the workflow for data scraping and processing",
+        "connections": [
+          { "to": "scrape_reddit" },
+          { "to": "scrape_quora" },
+          { "to": "scrape_youtube" },
+          { "to": "scrape_google_ads" }
+        ]
+      },
+      {
+        "id": "scrape_reddit",
+        "type": "scraping",
+        "label": "Scrape Reddit",
+        "description": "Fetch data from Reddit using relevant queries",
+        "config": {
+          "source": "Reddit API",
+          "queries": ["user pain points", "marketing challenges", "ad feedback"]
+        },
+        "connections": [
+          { "to": "process_sentiment" },
+          { "to": "process_pain_points" }
+        ]
+      },
+      {
+        "id": "scrape_quora",
+        "type": "scraping",
+        "label": "Scrape Quora",
+        "description": "Fetch data from Quora discussions",
+        "config": {
+          "source": "Quora API",
+          "queries": ["advertising strategies", "marketing triggers"]
+        },
+        "connections": [
+          { "to": "process_sentiment" },
+          { "to": "process_pain_points" }
+        ]
+      },
+      {
+        "id": "scrape_youtube",
+        "type": "scraping",
+        "label": "Scrape YouTube",
+        "description": "Fetch data from YouTube comments on competitor videos",
+        "config": {
+          "source": "YouTube API",
+          "video_ids": ["competitor_video_1", "competitor_video_2"]
+        },
+        "connections": [
+          { "to": "process_sentiment" },
+          { "to": "process_competitor_analysis" }
+        ]
+      },
+      {
+        "id": "scrape_google_ads",
+        "type": "scraping",
+        "label": "Scrape Google Ads",
+        "description": "Fetch competitor ad data from Google Ads API",
+        "config": {
+          "source": "Google Ads API",
+          "keywords": ["marketing hooks", "effective CTAs"]
+        },
+        "connections": [
+          { "to": "process_competitor_analysis" }
+        ]
+      },
+      {
+        "id": "process_sentiment",
+        "type": "processing",
+        "label": "Sentiment Analysis",
+        "description": "Analyze sentiment of scraped data",
+        "config": {
+          "algorithm": "SentimentAnalysis",
+          "input_sources": ["scrape_reddit", "scrape_quora", "scrape_youtube"]
+        },
+        "connections": [
+          { "to": "store_data" }
+        ]
+      },
+      {
+        "id": "process_pain_points",
+        "type": "processing",
+        "label": "Pain Point Detection",
+        "description": "Detect user pain points from the scraped data",
+        "config": {
+          "algorithm": "PainPointDetection",
+          "input_sources": ["scrape_reddit", "scrape_quora"]
+        },
+        "connections": [
+          { "to": "store_data" }
+        ]
+      },
+      {
+        "id": "process_competitor_analysis",
+        "type": "processing",
+        "label": "Competitor Analysis",
+        "description": "Analyze competitor ads and user responses",
+        "config": {
+          "algorithm": "CompetitorAnalysis",
+          "input_sources": ["scrape_youtube", "scrape_google_ads"]
+        },
+        "connections": [
+          { "to": "store_data" }
+        ]
+      },
+      {
+        "id": "store_data",
+        "type": "storage",
+        "label": "Datastax Storage",
+        "description": "Store processed data in Datastax",
+        "config": {
+          "database": "Datastax",
+          "table": "AdViseData",
+          "fields": ["sentiments", "pain_points", "competitor_analysis"]
+        },
+        "connections": [
+          { "to": "display_insights" }
+        ]
+      },
+      {
+        "id": "display_insights",
+        "type": "output",
+        "label": "Display Insights",
+        "description": "Show actionable insights for marketing professionals",
+        "config": {
+          "fields_to_display": [
+            "User Sentiments",
+            "Key Pain Points",
+            "Competitor Strategies",
+            "Trending Hooks"
+          ]
+        },
+        "connections": []
+      }
+    ]
+  }
+  
