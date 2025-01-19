@@ -18,7 +18,7 @@ const Home = () => {
   return (
     <>
     <Navbar />
-    <div className="relative w-full h-screen bg-gradient-to-r from-gray-900 via-purple-900 to-black overflow-hidden">
+    <div className="relative w-full h-screen bg-gradient-to-r from-gray-00 via-purple-900 to-black overflow-hidden">
       {/* Grid Background */}
       <div
   className="absolute inset-0"
