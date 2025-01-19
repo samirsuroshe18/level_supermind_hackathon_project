@@ -4,7 +4,7 @@ import Logo from "../assets/Advise.png";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false); // State for the mobile menu
-  const navItems = ["Home", "Dashboard", "About", "Team"];
+  const navItems = ["Home", "Dashboard", "Research", "Team"];
 
   return (
     <div className="relative flex items-center justify-between w-full px-6 py-4 bg-black bg-opacity-50 text-white sticky top-0 z-50">

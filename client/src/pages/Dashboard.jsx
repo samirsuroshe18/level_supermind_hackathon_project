@@ -94,7 +94,7 @@ const Dashboard = () => {
         }}
       />
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-semibold">Dashboard &gt; Market Overview</h1>
+          <h1 className="text-2xl font-semibold">Insights at a Glance</h1>
           <div className="flex items-center space-x-4">
             <button className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
               Contact

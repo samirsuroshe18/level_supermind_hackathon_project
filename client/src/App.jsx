@@ -5,6 +5,7 @@ import Navbar from './components/Navbar'
 import Dashboard from './pages/Dashboard'
 import Sidebar from './components/Sidebar'
 import Team from './pages/Team';
+import Research from './pages/Research';
 
 function App() {
   const [count, setCount] = useState(0)
@@ -21,7 +22,7 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/home" element={<Home />} />
         <Route path="/team" element={<Team />} />
-        <Route path="/navbar" element={<Navbar/>} />
+        <Route path="/research" element={<Research/>} />
         <Route path="*" element={<Sidebar />} />
       </Routes>
     </div>
