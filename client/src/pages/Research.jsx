@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { Particles } from "react-tsparticles";
 import { loadFull } from "tsparticles";
+import { FaPaperPlane } from "react-icons/fa"; // Import PaperPlane icon
 
 const Research = () => {
   const [selectedOption, setSelectedOption] = useState("Select Option");
@@ -12,6 +13,23 @@ const Research = () => {
 
   const particlesInit = async (engine) => {
     await loadFull(engine);
+  };
+
+  const handleSubmit = () => {
+    if (inputValue.trim()) {
+      // Construct the URL by appending the input value to the base URL
+      const baseUrl = "https://www.ebay.com/sch/i.html?_nkw=";
+      const query = encodeURIComponent(inputValue.trim()); // Encode the input value
+      const url = baseUrl + query;
+
+      console.log("URL:", url);
+
+      // Open the URL in a new tab
+      window.open(url, "_blank");
+
+      // Clear the input field after submission
+      setInputValue("");
+    }
   };
 
   return (
@@ -78,10 +96,10 @@ const Research = () => {
                 <option value="Select Option" className="text-black">
                   Select Option
                 </option>
-                <option value="Marketing" className="text-black">
+                <option value="Shopping" className="text-black">
                   Shopping
                 </option>
-                <option value="Design" className="text-black">
+                <option value="Technology" className="text-black">
                   Technology
                 </option>
                 <option value="Development" className="text-black">
@@ -89,8 +107,8 @@ const Research = () => {
                 </option>
               </select>
             </div>
-            {/* Text Input with Badge */}
-            <div className="relative w-full">
+            {/* Input with Badge and Send Button */}
+            <div className="relative w-full flex items-center">
               {selectedOption !== "Select Option" && (
                 <span className="absolute left-4 top-3 bg-blue-600 text-white text-sm px-3 py-1 rounded-lg">
                   {selectedOption}
@@ -100,7 +118,7 @@ const Research = () => {
                 type="text"
                 className={`w-full py-3 ${
                   selectedOption !== "Select Option" ? "pl-36" : "pl-4"
-                } pr-4 rounded-lg bg-gradient-to-r from-dark-800 to-dark-900 text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:outline-none`}
+                } pr-12 rounded-lg bg-gradient-to-r from-dark-800 to-dark-900 text-gray-300 placeholder-gray-500 focus:ring-2 focus:ring-purple-500 focus:outline-none`}
                 placeholder={
                   selectedOption !== "Select Option"
                     ? "Type your query here"
@@ -109,6 +127,12 @@ const Research = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
               />
+              <button
+                onClick={handleSubmit}
+                className="absolute right-4 p-3 bg-blue-600 rounded-full hover:bg-blue-700 text-white focus:outline-none"
+              >
+                <FaPaperPlane className="text-xl" />
+              </button>
             </div>
           </div>
         </div>
