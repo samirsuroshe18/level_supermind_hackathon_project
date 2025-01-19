@@ -6,23 +6,39 @@ import Footer from "../components/Footer";
 import { Particles } from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import { FaPaperPlane } from "react-icons/fa"; // Import PaperPlane icon
+import axios from 'axios'
 
 const Research = () => {
   const [selectedOption, setSelectedOption] = useState("Select Option");
   const [inputValue, setInputValue] = useState("");
+  const [data, setData] = useState({});
 
   const particlesInit = async (engine) => {
     await loadFull(engine);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    console.log(inputValue);
     if (inputValue.trim()) {
       // Construct the URL by appending the input value to the base URL
       const baseUrl = "https://www.ebay.com/sch/i.html?_nkw=";
-      const query = encodeURIComponent(inputValue.trim()); // Encode the input value
+      // const query = encodeURIComponent(inputValue.trim()); // Encode the input value
       const url = baseUrl + query;
 
-      console.log("URL:", url);
+      // console.log("URL:", url);
+      const data = {
+        baseUrl: baseUrl,  // First parameter
+        endPoint: query   // Second parameter
+    };
+
+    try {
+        const response = await axios.post('http://localhost:3000/api/v1/firecrawl/scrap', data);
+        console.log('Response:', response.data.data.parseData);
+        console.log('Response:', response.data.data.originalData);
+        setData(response.data.data.parseData)
+    } catch (error) {
+        console.error('Error:', error.response ? error.response.data : error.message);
+    }
 
       // Open the URL in a new tab
       window.open(url, "_blank");
