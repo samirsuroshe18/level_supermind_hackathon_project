@@ -13,8 +13,11 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@mendable/firecrawl-js": "^1.15.4",
+    "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^2.4.3",
+    "cassandra-driver": "^4.7.2",
     "cloudinary": "^2.5.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
@@ -24,8 +27,11 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.9.5",
     "multer": "^1.4.5-lts.1",
+    "natural": "^8.0.1",
     "nodemailer": "^6.9.16",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "puppeteer": "^24.1.0",
+    "sentiment": "^5.0.2"
   }
 }

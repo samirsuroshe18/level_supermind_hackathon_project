@@ -26,11 +26,13 @@ app.use(cookieParser());
 import userRouter from "./routes/user.route.js";
 import oauthRouter from "./routes/oauth.routes.js";
 import emailRouter from "./routes/email.routes.js";
+import firecrawlRouter from "./routes/firecrawl.routes.js";
 
 //routes declaration
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/oauth", oauthRouter);
 app.use("/api/v1/email", emailRouter);
+app.use("/api/v1/firecrawl", firecrawlRouter);
 
 
 //custom error handler

@@ -1,6 +1,6 @@
 import React from "react";
 import { FaHome, FaNewspaper, FaCoins, FaChartLine, FaLightbulb, FaCogs } from "react-icons/fa";
-import { Link } from "react-scroll"; // Importing the scroll link from react-scroll
+import { Link } from "react-router-dom"; // Importing the scroll link from react-scroll
 import Particles from "./Particles"; // Import the Particles component
 
 const Sidebar = () => {
