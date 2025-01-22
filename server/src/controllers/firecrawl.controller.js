@@ -3,7 +3,6 @@ import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import sentiment from 'sentiment';
 import fs from 'fs';
-// import {TfIdf } from 'natural';
 import FirecrawlApp from '@mendable/firecrawl-js';
 import astraDB from '../utils/astraDB.js';
 import extractJson from '../utils/extractJson.js';
@@ -17,17 +16,16 @@ import axios from 'axios';
 const insetData = asyncHandler(async (req, res) => {
   try {
     const astraClient = await astraDB();
-  
     console.log("Connected to AstraDB");
   
-    const query = `INSERT INTO default_keyspace.advise (id, markdown) VALUES (123, ?)`;
-    const params = [data]; // Pass data as a parameter array
+    // const query = `INSERT INTO default_keyspace.advise (id, markdown) VALUES (123, ?)`;
+    // const params = [data]; // Pass data as a parameter array
   
-    await astraClient.execute(query, params, { prepare: true }); // Use parameterized query
-    await astraClient.shutdown();
+    // await astraClient.execute(query, params, { prepare: true }); // Use parameterized query
+    // await astraClient.shutdown();
   
-    console.log("Data inserted successfully");
-    return res.status(200).json(new ApiResponse(200, {}, "Data inserted successfully"));
+    // console.log("Data inserted successfully");
+    // return res.status(200).json(new ApiResponse(200, {}, "Data inserted successfully"));
   
   } catch (error) {
     console.error("Database error:", error);
@@ -39,8 +37,9 @@ const insetData = asyncHandler(async (req, res) => {
 
 const fireCrawl = asyncHandler(async (req, res) => {
   const {baseUrl, endPoint} = req.body;
+  console.log('data scraping...', baseUrl);
   const app = new FirecrawlApp({ apiKey: "fc-6134c37b375848919e3c113751f1cae9" });
-  const crawlResponse = await app.crawlUrl(`${baseUrl}${endPoint}`, {
+  const crawlResponse = await app.crawlUrl(`${baseUrl}`, {
     scrapeOptions: {
       formats: ['markdown', 'html'],
     }
@@ -49,6 +48,7 @@ const fireCrawl = asyncHandler(async (req, res) => {
   if (!crawlResponse.success) {
     throw new ApiError(`Failed to crawl: ${crawlResponse.error}`)
   }
+  console.log('datastraping complete..')
 
   const markdown = crawlResponse.data[0].markdown;
   console.log(crawlResponse.data[0].markdown);
@@ -56,11 +56,13 @@ const fireCrawl = asyncHandler(async (req, res) => {
   // console.log(`Successfully saved markdown to D:\output.md`);
 
   const astraClient = await astraDB();
+  console.log('astra db connection successfull');
   const truncateQuery = 'TRUNCATE default_keyspace.advise;';
   await astraClient.execute(truncateQuery);
 
   const query = `INSERT INTO default_keyspace.advise (id,markdown) VALUES (123,'${markdown}')`;
   await astraClient.execute(query);
+  console.log('data inserted')
 
   const payload = {
     input_value: "give me the statistics that you have told to do. do you understand",

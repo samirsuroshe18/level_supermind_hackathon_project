@@ -23,12 +23,12 @@ const Research = () => {
       // Construct the URL by appending the input value to the base URL
       const baseUrl = "https://www.ebay.com/sch/i.html?_nkw=";
       // const query = encodeURIComponent(inputValue.trim()); // Encode the input value
-      const url = baseUrl + query;
+      const url = baseUrl + inputValue;
 
       // console.log("URL:", url);
       const data = {
         baseUrl: baseUrl,  // First parameter
-        endPoint: query   // Second parameter
+        endPoint: inputValue   // Second parameter
     };
 
     try {
