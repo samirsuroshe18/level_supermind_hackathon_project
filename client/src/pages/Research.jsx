@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import ParticlesBg from "particles-bg";
 import ParticlesCanvas from "../components/Particles";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { Particles } from "react-tsparticles";
 import { loadFull } from "tsparticles";
 import { FaPaperPlane } from "react-icons/fa"; // Import PaperPlane icon
@@ -50,8 +48,7 @@ const Research = () => {
 
   return (
     <>
-      <Navbar />
-      <div className="relative w-full h-screen bg-gradient-to-r from-gray-00 via-purple-900 to-black overflow-hidden">
+      <div className="bg-dark-900 relative w-full h-screen bg-gradient-to-r from-gray-00 via-purple-900 to-black overflow-hidden">
         {/* Grid Background */}
         <div
           className="absolute inset-0"
@@ -153,7 +150,6 @@ const Research = () => {
           </div>
         </div>
       </div>
-      <Footer />
     </>
   );
 };

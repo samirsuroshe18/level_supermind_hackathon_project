@@ -11,22 +11,7 @@ function App() {
   const [count, setCount] = useState(0)
 
   return (
-    <Router>
-    <div className="min-h-screen bg-[#0B0F1C] text-white">
-      {/* Navbar */}
-      
-
-      {/* Routes */}
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/team" element={<Team />} />
-        <Route path="/research" element={<Research/>} />
-        <Route path="*" element={<Sidebar />} />
-      </Routes>
-    </div>
-  </Router>
+    <h1>Hello world!</h1>
   )
 }
 
