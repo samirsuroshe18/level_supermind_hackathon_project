@@ -1,85 +1,71 @@
 import asyncHandler from '../utils/customAsyncHandler.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
-import sentiment from 'sentiment';
-import fs from 'fs';
-import FirecrawlApp from '@mendable/firecrawl-js';
-import astraDB from '../utils/astraDB.js';
+import FireCrawlApp from '@mendable/firecrawl-js';
 import extractJson from '../utils/extractJson.js';
-import { response } from 'express';
 import axios from 'axios';
+import db from '../utils/astraDB.js';
 
-// Initialize Sentiment and TF-IDF for keyword extraction
-// const sentimentAnalyzer = new sentiment();
-// const tfidf = new TfIdf();
+const dataScraping = asyncHandler(async (req, res) => {
+  const { baseUrl } = req.body;
 
-const insetData = asyncHandler(async (req, res) => {
-  try {
-    const astraClient = await astraDB();
-    console.log("Connected to AstraDB");
-  
-    // const query = `INSERT INTO default_keyspace.advise (id, markdown) VALUES (123, ?)`;
-    // const params = [data]; // Pass data as a parameter array
-  
-    // await astraClient.execute(query, params, { prepare: true }); // Use parameterized query
-    // await astraClient.shutdown();
-  
-    // console.log("Data inserted successfully");
-    // return res.status(200).json(new ApiResponse(200, {}, "Data inserted successfully"));
-  
-  } catch (error) {
-    console.error("Database error:", error);
-    throw new ApiError(500, "Failed to insert data into database");
-  }
-  
-});
+  const app = new FireCrawlApp({ apiKey: "fc-f2ce38c1d53f442a8dbc7cebac39d9f3" });
 
-
-const fireCrawl = asyncHandler(async (req, res) => {
-  const {baseUrl, endPoint} = req.body;
-  console.log('data scraping...', baseUrl);
-  const app = new FirecrawlApp({ apiKey: "fc-6134c37b375848919e3c113751f1cae9" });
-  const crawlResponse = await app.crawlUrl(`${baseUrl}`, {
-    scrapeOptions: {
-      formats: ['markdown', 'html'],
-    }
+  const scrapeResult = await app.scrapeUrl(baseUrl, {
+    formats: ["markdown"],
   });
 
-  if (!crawlResponse.success) {
+  if (!scrapeResult.success) {
     throw new ApiError(`Failed to crawl: ${crawlResponse.error}`)
   }
-  console.log('datastraping complete..')
+  console.log(scrapeResult.markdown);
 
-  const markdown = crawlResponse.data[0].markdown;
-  console.log(crawlResponse.data[0].markdown);
-  // fs.writeFileSync('D:\\output.md', crawlResponse.data[0].markdown, 'utf8');
-  // console.log(`Successfully saved markdown to D:\output.md`);
+  return res.status(200).json(
+    new ApiResponse(200, scrapeResult.markdown, "Data fetched successfully")
+  );
+});
 
-  const astraClient = await astraDB();
-  console.log('astra db connection successfull');
-  const truncateQuery = 'TRUNCATE default_keyspace.advise;';
-  await astraClient.execute(truncateQuery);
+const fireCrawl = asyncHandler(async (req, res) => {
+  const { baseUrl } = req.body;
 
-  const query = `INSERT INTO default_keyspace.advise (id,markdown) VALUES (123,'${markdown}')`;
-  await astraClient.execute(query);
+  const app = new FireCrawlApp({ apiKey: "fc-f2ce38c1d53f442a8dbc7cebac39d9f3" });
+
+  const scrapeResult = await app.scrapeUrl(baseUrl, {
+    formats: ["markdown"],
+  });
+
+  if (!scrapeResult.success) {
+    throw new ApiError(`Failed to crawl: ${crawlResponse.error}`)
+  }
+
+  const markdown = scrapeResult.markdown;
+
+  // Split the input markdown into manageable chunks
+  const chunks = chunksArray(markdown);
+
+  const collection = db.collection('ART_FINDER');
+  await collection.insertOne({ markdown: chunks, date: new Date() });
+
   console.log('data inserted')
 
+
+
   const payload = {
-    input_value: "give me the statistics that you have told to do. do you understand",
-    input_type: "chat",
-    output_type: "chat",
-    tweaks: {
-      "ChatInput-sb0kn": {},
-      "Prompt-laWRx": {},
-      "ParseData-EHGrZ": {},
-      "AstraDBToolComponent-IHNnw": {},
-      "GoogleGenerativeAIModel-socrv": {},
-      "ChatOutput-95XP6": {},
-      "JSONCleaner-if8NZ": {},
-      "ParseData-uh6W9": {},
-    },
+    "input_value": "Give me the latest data statistics you can find latest data base on date field in database",
+    "output_type": "chat",
+    "input_type": "chat",
+    "tweaks": {
+      "Prompt-HrYpk": {},
+      "ParseData-Z6OIq": {},
+      "GoogleGenerativeAIModel-7JcPZ": {},
+      "ChatOutput-rDHpY": {},
+      "AstraDBToolComponent-fNRH4": {},
+      "ChatInput-6sTBw": {}
+    }
   };
-console.log("api calling.....")
+
+  console.log("api calling.....")
+
   const response = await axios({
     method: "post",
     url: "https://api.langflow.astra.datastax.com/lf/9bb3a128-8c2e-4416-866b-6ad45c278a17/api/v1/run/8a2133d4-fa14-447a-a860-8daaa6862153?stream=false",
@@ -90,115 +76,77 @@ console.log("api calling.....")
     data: payload,
   });
 
-  const jsonResponseString =response.data?.outputs[0]?.outputs[0]?.results?.message?.data?.text;
+  console.log(response);
+
+  const jsonResponseString = response.data?.outputs[0]?.outputs[0]?.results?.message?.data?.text;
   const extractedJsonData = extractJson(jsonResponseString);
-    const parseJsonData = JSON.parse(extractedJsonData[0].code);
-    console.log(parseJsonData);
-    console.log(parseJsonData[0].language)
+  const parseJsonData = JSON.parse(extractedJsonData[0].code);
+  console.log(parseJsonData);
+  console.log(extractedJsonData[0].language)
 
   return res.status(200).json(
-    new ApiResponse(200, {'originalData':response.data, 'parseData': parseJsonData}, "Data fetched successfully")
+    new ApiResponse(200, { 'originalData': response.data, 'parseData': parseJsonData }, "Data fetched successfully")
   )
 });
 
-function saveMarkdownToFile(data, filename) {
+export { fireCrawl, dataScraping };
+
+
+
+function chunksArray(markdown) {
+
   try {
-    fs.writeFileSync(filename, {'originalData':response.data, 'parseData': parseJsonData}, 'utf8');
-    console.log(`Successfully saved markdown to ${filename}`);
+    // Define maximum document size (in bytes)
+    const MAX_SIZE = 8000;
+
+    function splitIntoChunks(markdown) {
+      let chunks = [];
+      let currentChunk = '';
+      let currentSize = 0;
+
+      // Split the markdown into smaller parts of 8000 bytes or less
+      for (let i = 0; i < markdown.length; i++) {
+        currentChunk += markdown[i];
+        currentSize += Buffer.byteLength(markdown[i]);
+
+        // Check if adding the next character would exceed the limit
+        if (currentSize >= MAX_SIZE) {
+          chunks.push(currentChunk.trim());
+          currentChunk = '';
+          currentSize = 0;
+        }
+      }
+
+      if (currentChunk.length > 0) {
+        chunks.push(currentChunk.trim());
+      }
+
+      return chunks;
+    }
+
+    // Split the input markdown into manageable chunks
+    const chunks = splitIntoChunks(markdown);
+
+    // Insert into database using markdown1, markdown2, ...properties
+    // let insertObject = {};
+
+    // for (let i = 0; i < chunks.length; i++) {
+    //   if (i < chunks.length) {
+    //     insertObject[`markdown${i + 1}`] = chunks[i];
+    //   }
+    // }
+
+    // // await collection.insertOne(insertObject);
+    // console.log(`Inserted document with ${chunks.length} parts`);
+    // console.log(insertObject);
+
+    // const collection = db2.collection('ART_FINDER');
+    // await collection.insertOne({markdown: chunks});
+    // await collection.deleteAll();
+
+    return chunks;
   } catch (error) {
-    console.error('Error saving markdown:', error);
+    console.log(error.message);
   }
 }
 
-
-export { fireCrawl, insetData };
-
-
-
-
-
-
-// import asyncHandler from '../utils/customAsyncHandler.js';
-// import ApiError from '../utils/ApiError.js';
-// import ApiResponse from '../utils/ApiResponse.js';
-// import fs from 'fs';
-// import FirecrawlApp from '@mendable/firecrawl-js';
-// import astraDB from '../utils/astraDB.js';
-// import extractJson from '../utils/extractJson.js';
-// import axios from 'axios';
-
-// // Static data for testing purposes
-// // const data = `[![Flipkart](https://static-assets-web.flixcart.com/fk-p-linchpin-web/fk-cp-zion/img/flipkart-plus_8d85f4.png)](https://www.flipkart.com/)...`;
-
-// // Insert static data into the database
-// const insertData = asyncHandler(async (req, res) => {
-//   try {
-//     const astraClient = await astraDB();
-
-//     const query = `INSERT INTO default_keyspace.data (id, markdown) VALUES (uuid(), ?)`;
-//     const params = [data];
-
-//     await astraClient.execute(query, params, { prepare: true });
-//     await astraClient.shutdown();
-
-//     console.log('Data inserted successfully');
-//     return res.status(200).json(new ApiResponse(200, {}, 'Data inserted successfully'));
-//   } catch (error) {
-//     console.error('Error inserting data:', error.message);
-//     throw new ApiError(500, `Failed to insert data: ${error.message}`);
-//   }
-// });
-
-// // Crawl data and store it in the database
-// const fireCrawl = asyncHandler(async (req, res) => {
-//   try {
-//     const { baseUrl, endPoint } = req.body;
-
-//     if (!baseUrl || !endPoint) {
-//       throw new ApiError(400, 'baseUrl and endPoint are required');
-//     }
-
-//     const app = new FirecrawlApp({ apiKey: 'fc-6134c37b375848919e3c113751f1cae9' });
-//     const crawlResponse = await app.crawlUrl(`${baseUrl}${endPoint}`, {
-//       scrapeOptions: { formats: ['markdown', 'html'] },
-//     });
-
-//     if (!crawlResponse.success) {
-//       console.error('Crawling failed:', crawlResponse.error);
-//       throw new ApiError(500, `Crawling failed: ${crawlResponse.error}`);
-//     }
-
-//     const markdown = crawlResponse.data[0]?.markdown;
-//     if (!markdown) {
-//       throw new ApiError(400, 'Crawled data does not contain markdown');
-//     }
-
-//     console.log('Crawled Markdown:', markdown);
-
-//     const astraClient = await astraDB();
-//     await astraClient.execute('TRUNCATE default_keyspace.data');
-
-//     const query = `INSERT INTO default_keyspace.data (id, markdown) VALUES (uuid(), ?)`;
-//     const params = [markdown];
-//     await astraClient.execute(query, params, { prepare: true });
-
-//     console.log('Data stored in the database');
-
-//     return res.status(200).json(new ApiResponse(200, { markdown }, 'Data crawled and stored successfully'));
-//   } catch (error) {
-//     console.error('Error in fireCrawl:', error.message);
-//     throw new ApiError(500, `Failed to crawl and store data: ${error.message}`);
-//   }
-// });
-
-// // Save Markdown data to a file
-// function saveMarkdownToFile(data, filename) {
-//   try {
-//     fs.writeFileSync(filename, JSON.stringify(data, null, 2), 'utf8');
-//     console.log(`Successfully saved markdown to ${filename}`);
-//   } catch (error) {
-//     console.error('Error saving markdown to file:', error.message);
-//   }
-// }
-
-// export { fireCrawl, insertData };

@@ -7,7 +7,7 @@ const Navbar = () => {
   const navItems = ["Home", "Dashboard", "Research", "Team"];
 
   return (
-    <div className="relative flex items-center justify-between w-full px-6 py-4 bg-black bg-opacity-50 text-white sticky top-0 z-50">
+    <div className="flex items-center justify-between w-full px-6 py-4 bg-black sticky top-0 z-50">
       {/* Left Logo */}
       <div className="flex items-center space-x-2">
         <div className="w-32 h-10  flex items-center justify-center">
@@ -41,31 +41,64 @@ const Navbar = () => {
 
       {/* Middle Nav Links (Desktop) */}
       <div className="hidden sm:flex items-center space-x-6 bg-black bg-opacity-30 px-6 py-2 rounded-full shadow-md">
-        {navItems.map((item) => {
-          const path = `/${item.replace(/\s+/g, "-").toLowerCase()}`;
-          return (
-            <NavLink
-              key={item}
-              to={path}
-              className={({ isActive }) =>
-                `relative text-sm font-medium px-3 py-2 rounded-full transition-all duration-300 ${
-                  isActive
-                    ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white shadow-lg"
-                    : "text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600"
-                }`
-              }
-              aria-current={({ isActive }) => (isActive ? "page" : undefined)}
-            >
-              {item}
-            </NavLink>
-          );
-        })}
+        <NavLink
+          to=''
+          className={({ isActive }) =>
+            `relative text-sm font-medium px-3 py-2 rounded-full transition-all duration-300 ${
+              isActive
+                ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white shadow-lg"
+                : "text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600"
+            }`
+          }
+          aria-current={({ isActive }) => (isActive ? "page" : undefined)}
+        >
+          Home
+        </NavLink>
+        <NavLink
+          to='dashboard'
+          className={({ isActive }) =>
+            `relative text-sm font-medium px-3 py-2 rounded-full transition-all duration-300 ${
+              isActive
+                ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white shadow-lg"
+                : "text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600"
+            }`
+          }
+          aria-current={({ isActive }) => (isActive ? "page" : undefined)}
+        >
+          Dashboard
+        </NavLink>
+        <NavLink
+          to='research'
+          className={({ isActive }) =>
+            `relative text-sm font-medium px-3 py-2 rounded-full transition-all duration-300 ${
+              isActive
+                ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white shadow-lg"
+                : "text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600"
+            }`
+          }
+          aria-current={({ isActive }) => (isActive ? "page" : undefined)}
+        >
+          Research
+        </NavLink>
+        <NavLink
+          to='team'
+          className={({ isActive }) =>
+            `relative text-sm font-medium px-3 py-2 rounded-full transition-all duration-300 ${
+              isActive
+                ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white shadow-lg"
+                : "text-gray-400 hover:text-white hover:bg-gradient-to-r hover:from-blue-600 hover:to-purple-600"
+            }`
+          }
+          aria-current={({ isActive }) => (isActive ? "page" : undefined)}
+        >
+          Team
+        </NavLink>
       </div>
 
       {/* Right Button (Desktop) */}
       <div className="hidden sm:block">
         <NavLink
-          to="/launch"
+          to="/research"
           className="px-4 sm:px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-full shadow-md hover:opacity-90 transition-all duration-300"
         >
           Get Started

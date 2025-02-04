@@ -1,9 +1,9 @@
 import {Router} from "express";
-import { fireCrawl, insetData } from "../controllers/firecrawl.controller.js";
+import { dataScraping, fireCrawl } from "../controllers/firecrawl.controller.js";
 
 const router = Router();
 
 router.route('/scrap').post(fireCrawl);
-router.route('/insert').get(insetData);
+router.route('/scrap-data').post(dataScraping);
 
 export default router;
