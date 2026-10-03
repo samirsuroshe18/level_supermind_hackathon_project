@@ -3,6 +3,8 @@ import cors from 'cors';
 import cookieParser from "cookie-parser";
 import ApiError from './utils/ApiError.js';
 import ApiResponse from './utils/ApiResponse.js';
+import userRouter from './routes/user.routes.js';
+import verifyRouter from './routes/verify.routes.js';
 
 const app = express();
 
@@ -15,6 +17,9 @@ app.use(cookieParser());
 app.get("/api/v1/health", (req, res) => {
     return res.status(200).json(new ApiResponse(200, { status: 'ok' }, "OK"));
 });
+
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/verify", verifyRouter);
 
 app.use((req, res, next) => {
     next(new ApiError(404, "Route not found"));
