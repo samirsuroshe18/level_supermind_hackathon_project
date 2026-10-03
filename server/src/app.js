@@ -1,41 +1,50 @@
 import express from "express";
-import cors from "cors";
+import cors from 'cors';
 import cookieParser from "cookie-parser";
-import {fileURLToPath} from "url";
-import { dirname } from "path";
-import path from "path";
-import errorHandler from "./utils/errorHandler.js";
+import ApiError from './utils/ApiError.js';
+import ApiResponse from './utils/ApiResponse.js';
+import userRouter from './routes/user.routes.js';
+import verifyRouter from './routes/verify.routes.js';
+import researchRouter from './routes/research.routes.js';
 
 const app = express();
 
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const staticPath = path.join(__dirname, '../public');
-
-app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, './views'));
-
-app.use(cors({origin: ["http://localhost:5173", process.env.CORS_ORIGIN], credentials: true }));
+// allow the frontend origin to send the auth cookies
+app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true }));
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
-app.use(express.static(staticPath));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-//routes import
-import userRouter from "./routes/user.route.js";
-import oauthRouter from "./routes/oauth.routes.js";
-import emailRouter from "./routes/email.routes.js";
-import firecrawlRouter from "./routes/firecrawl.routes.js";
+app.get("/api/v1/health", (req, res) => {
+    return res.status(200).json(new ApiResponse(200, { status: 'ok' }, "OK"));
+});
 
-//routes declaration
-app.use("/api/v1/user", userRouter);
-app.use("/api/v1/oauth", oauthRouter);
-app.use("/api/v1/email", emailRouter);
-app.use("/api/v1/firecrawl", firecrawlRouter);
+app.use("/api/v1/users", userRouter);
+app.use("/api/v1/verify", verifyRouter);
+app.use("/api/v1/research", researchRouter);
 
+app.use((req, res, next) => {
+    next(new ApiError(404, "Route not found"));
+});
 
-//custom error handler
-app.use(errorHandler);
+// Custom error handling
+app.use((err, req, res, next) => {
+    const isValidationError = err.name === 'ValidationError';
+    const statusCode = err.statusCode || (isValidationError ? 400 : 500);
+    // an unexpected failure can carry database or stack details, so only messages
+    // written for the client (ApiError) or for a 4xx are sent back
+    const isUnexpected = statusCode >= 500 && !(err instanceof ApiError);
+    const message = isUnexpected ? "Internal server error" : (err.message || "Internal server error");
 
-export default app;
+    if (statusCode >= 500) {
+        console.log(err);
+    }
+
+    return res.status(statusCode).json({
+        statusCode: statusCode,
+        message: message,
+        success: false
+    });
+})
+
+export default app
