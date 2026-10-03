@@ -62,7 +62,7 @@ list of posts in a common shape.
 |---|---|---|---|
 | YouTube | YouTube Data API v3 | `YOUTUBE_API_KEY` | Top 5 videos for the topic, up to 40 top-level comments each |
 | Hacker News | Algolia HN Search | none | Up to 100 stories and comments matching the topic |
-| Reddit | Reddit OAuth API | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | Up to 50 posts matching the topic, with their top comments |
+| Reddit | Reddit OAuth API | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | Up to 50 posts matching the topic, and up to 10 top comments from each of the 5 highest-scored posts |
 
 Rules that apply to all sources:
 
@@ -132,7 +132,7 @@ user and only ever return that user's researches.
 | Route | Purpose |
 |---|---|
 | `POST /users/register`, `POST /users/login`, `GET /users/logout`, `GET /users/me` | Accounts |
-| `POST /users/forgot-password`, `GET /verify/verify-email`, `POST /verify/reset-password` | Email links |
+| `POST /users/forgot-password`, `GET /verify/verify-email`, `GET /verify/reset-password`, `POST /verify/verify-password` | Email links: verify the address, check a reset link, set the new password |
 | `GET /research/meta` | Enabled sources, daily limit, researches left today |
 | `POST /research` | Start a research; `202` with its id |
 | `GET /research` | The user's researches, newest first, without report bodies |
@@ -224,7 +224,8 @@ docs/
 | `MONGODB_URI` | Database connection string |
 | `PORT`, `SERVER_HOST`, `NODE_ENV` | Where and how the API runs |
 | `CORS_ORIGIN`, `FRONTEND_URL` | Web app address, for CORS and email links |
-| `ACCESS_TOKEN_SECRET`, `ACCESS_TOKEN_EXPIRY` | Session token signing |
+| `ACCESS_TOKEN_SECRET`, `ACCESS_TOKEN_EXPIRY` | Access token signing |
+| `REFRESH_TOKEN_SECRET`, `REFRESH_TOKEN_EXPIRY` | Refresh token signing |
 | `BREVO_API_KEY`, `MAIL_FROM` | Email over HTTPS |
 | `MAIL_HOST`, `EMAIL_PORT`, `MAIL_USER`, `MAIL_PASS` | Email over SMTP, when Brevo is not set |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | Language model |
