@@ -8,6 +8,24 @@ it came from.
 
 The project started at the Level SuperMind hackathon in January 2025.
 
+## Live demo
+
+**<https://ad-vise.vercel.app>**
+
+Log in with the demo account to read finished reports without signing up. The
+login page has a button for it.
+
+| Email | Password |
+|---|---|
+| `demo@advise.demo` | `Demo@123` |
+
+- The demo reports are real researches, made from public posts at the time
+  they were run.
+- The API runs on a free plan that sleeps when idle, so the first request can
+  take up to a minute.
+- You can also sign up with your own email address; a verification link is
+  sent to it. Each account can run five researches a day.
+
 ## Screenshots
 
 **Landing page**
