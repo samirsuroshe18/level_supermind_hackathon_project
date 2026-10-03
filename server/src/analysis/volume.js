@@ -1,36 +1,27 @@
-const WEEKS = 12;
-const DAY_MS = 24 * 60 * 60 * 1000;
-const WEEK_MS = 7 * DAY_MS;
+const MONTHS = 12;
 
-// Monday 00:00 UTC of the week a date falls in
-const weekStartOf = (date) => {
-    const midnight = Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate());
-    const daysSinceMonday = (date.getUTCDay() + 6) % 7;
+// months counted from year zero, so two dates can be compared by subtraction
+const monthIndex = (date) => date.getUTCFullYear() * 12 + date.getUTCMonth();
 
-    return midnight - daysSinceMonday * DAY_MS;
-};
+const label = (index) => `${Math.floor(index / 12)}-${String((index % 12) + 1).padStart(2, '0')}`;
 
-// Posts per week for the last 12 weeks, oldest first; the last entry is the current week
-const weeklyVolume = (posts, now = new Date()) => {
-    const currentWeek = weekStartOf(now);
-    const firstWeek = currentWeek - (WEEKS - 1) * WEEK_MS;
+// Posts per month for the last 12 months, oldest first; the last entry is the current month
+const monthlyVolume = (posts, now = new Date()) => {
+    const first = monthIndex(now) - (MONTHS - 1);
 
-    const weeks = Array.from({ length: WEEKS }, (_, index) => ({
-        weekStart: new Date(firstWeek + index * WEEK_MS).toISOString().slice(0, 10),
-        count: 0,
-    }));
+    const months = Array.from({ length: MONTHS }, (_, offset) => ({ month: label(first + offset), count: 0 }));
 
     for (const post of posts) {
-        const time = new Date(post.createdAt).getTime();
-        if (Number.isNaN(time) || !post.createdAt) continue;
+        const date = new Date(post.createdAt);
+        if (!post.createdAt || Number.isNaN(date.getTime())) continue;
 
-        const index = Math.floor((time - firstWeek) / WEEK_MS);
-        if (index >= 0 && index < WEEKS) {
-            weeks[index].count += 1;
+        const offset = monthIndex(date) - first;
+        if (offset >= 0 && offset < MONTHS) {
+            months[offset].count += 1;
         }
     }
 
-    return weeks;
+    return months;
 };
 
-export { weeklyVolume }
+export { monthlyVolume }
