@@ -27,6 +27,12 @@ const userSchema = new Schema({
         default: false,
     },
 
+    // the shared account visitors can try the app with; it cannot be changed or emptied
+    isDemo: {
+        type: Boolean,
+        default: false,
+    },
+
     refreshToken: {
         type: String
     },

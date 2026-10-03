@@ -23,7 +23,7 @@ const seed = async () => {
     }
 
     // User.create runs the password hashing hook
-    const user = await User.create({ userName: 'Demo User', email: DEMO_EMAIL, password: DEMO_PASSWORD, isVerified: true });
+    const user = await User.create({ userName: 'Demo User', email: DEMO_EMAIL, password: DEMO_PASSWORD, isVerified: true, isDemo: true });
 
     console.log(`\nDemo account: ${DEMO_EMAIL} / ${DEMO_PASSWORD}\n`);
 

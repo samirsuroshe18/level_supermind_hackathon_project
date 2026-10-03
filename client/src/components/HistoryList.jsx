@@ -12,7 +12,8 @@ const detailOf = (research) => {
   return 'In progress';
 };
 
-// The user's researches, newest first. Deleting asks once more in place.
+// The user's researches, newest first. Deleting asks once more in place;
+// without onDelete the list is read-only.
 const HistoryList = ({ researches, onDelete }) => {
   const [confirming, setConfirming] = useState(null);
   const [deleting, setDeleting] = useState(null);
@@ -61,7 +62,7 @@ const HistoryList = ({ researches, onDelete }) => {
               </button>
             </div>
           ) : (
-            !isActive(research) && (
+            onDelete && !isActive(research) && (
               <button
                 type="button"
                 onClick={() => setConfirming(research._id)}

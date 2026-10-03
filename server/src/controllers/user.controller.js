@@ -134,7 +134,11 @@ const loginUser = asyncHandler(async (req, res) => {
 
 const logoutUser = asyncHandler(async (req, res) => {
 
-    await endSessions(req.user._id);
+    // the demo account is used by many visitors at once; one of them leaving must not
+    // sign out the others, so only this browser's cookies are cleared
+    if (!req.user.isDemo) {
+        await endSessions(req.user._id);
+    }
 
     return res.status(200)
         .clearCookie("accessToken", cookieOptions())
@@ -157,7 +161,8 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
     const user = await User.findOne({ email });
 
-    if (user) {
+    // the demo account has no mailbox, and its password must stay the published one
+    if (user && !user.isDemo) {
         await mailSender(email, user._id, "RESET");
     }
 

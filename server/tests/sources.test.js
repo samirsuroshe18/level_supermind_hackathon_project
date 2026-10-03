@@ -275,3 +275,24 @@ describe('collectPosts', () => {
         expect(fetchFn.calls.every((call) => call.url.startsWith(HN_SEARCH))).toBe(true);
     });
 });
+
+describe('review fixes', () => {
+    test('cleanPosts replaces a missing or invalid date with null', () => {
+        const cleaned = cleanPosts([
+            post({ id: 'a', text: 'First post that is long enough.', createdAt: new Date('not a date') }),
+            post({ id: 'b', text: 'Second post that is long enough.', createdAt: undefined }),
+            post({ id: 'c', text: 'Third post that is long enough.' }),
+        ]);
+
+        expect(cleaned.map((item) => item.createdAt)).toEqual([null, null, new Date('2026-09-01T00:00:00Z')]);
+    });
+
+    test('a source that answers 200 with a body that is not JSON is skipped', async () => {
+        const fetchFn = async () => ({ ok: true, status: 200, json: async () => { throw new SyntaxError('Unexpected token <'); } });
+
+        const result = await collectPosts('desks', { sources: [hackerNews], fetchFn });
+
+        expect(result.posts).toEqual([]);
+        expect(result.skipped).toEqual([{ name: 'hackerNews', label: 'Hacker News', reason: 'Unexpected token <' }]);
+    });
+});

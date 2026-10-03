@@ -4,7 +4,7 @@ import ApiResponse from '../utils/ApiResponse.js';
 import { Research, ACTIVE_STATUSES } from '../models/research.model.js';
 import { enabledSources } from '../sources/index.js';
 import { runResearch } from '../jobs/runResearch.js';
-import { dailyLimit, usedToday } from '../utils/dailyLimit.js';
+import { attemptLimit, attemptsToday, dailyLimit, usedToday } from '../utils/dailyLimit.js';
 import { isValidObjectId } from '../utils/objectId.js';
 
 const TOPIC_MIN = 3;
@@ -40,13 +40,13 @@ const withoutOwner = (research) => {
 
 const getMeta = asyncHandler(async (req, res) => {
     const limit = dailyLimit();
-    const used = await usedToday(req.user._id);
+    const [used, attempts] = await Promise.all([usedToday(req.user._id), attemptsToday(req.user._id)]);
 
     return res.status(200).json(
         new ApiResponse(200, {
             sources: enabledSources().map(({ name, label }) => ({ name, label })),
             dailyLimit: limit,
-            remaining: Math.max(0, limit - used),
+            remaining: Math.max(0, Math.min(limit - used, attemptLimit() - attempts)),
             topicMaxLength: TOPIC_MAX,
         }, "Research settings")
     );
@@ -67,6 +67,10 @@ const startResearch = asyncHandler(async (req, res) => {
 
     if (await usedToday(req.user._id) >= limit) {
         throw new ApiError(429, `You have reached today's limit of ${limit} researches. Try again tomorrow.`);
+    }
+
+    if (await attemptsToday(req.user._id) >= attemptLimit()) {
+        throw new ApiError(429, "Too many attempts today. Try again tomorrow.");
     }
 
     let research;
@@ -109,6 +113,11 @@ const getResearch = asyncHandler(async (req, res) => {
 
 const deleteResearch = asyncHandler(async (req, res) => {
     const research = await findOwn(req);
+
+    // every visitor sees the same demo reports
+    if (req.user.isDemo) {
+        throw new ApiError(403, "The demo account's reports cannot be deleted.");
+    }
 
     if (ACTIVE_STATUSES.includes(research.status)) {
         throw new ApiError(409, "This research is still running. Wait for it to finish.");

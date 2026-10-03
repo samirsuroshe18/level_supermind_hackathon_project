@@ -108,6 +108,8 @@ so it can be changed without a code change when Google retires a model.
 ## Limits
 
 - Five researches per user per day (UTC). Failed researches do not count.
+- Fifteen attempts per user per day, whatever their outcome, so failed
+  researches cannot be repeated without end.
 - One research at a time per user.
 - The remaining count is shown next to the research form.
 
@@ -120,6 +122,13 @@ Email and password accounts with email verification, the same flow as before:
 register, verify by emailed link, log in, log out, forgot and reset password.
 Sessions use an httpOnly cookie. Changing or resetting a password ends
 existing sessions.
+
+Sign-up, login and password reset are limited to 30 requests per visitor in
+15 minutes.
+
+The demo account is shared by every visitor. Its reports cannot be deleted,
+its password cannot be reset, and logging out of it only ends that visitor's
+own session.
 
 Email is sent through the Brevo HTTPS API when `BREVO_API_KEY` is set, and
 through SMTP otherwise.
@@ -141,7 +150,8 @@ user and only ever return that user's researches.
 
 Errors use one shape: `{ success: false, message }` with a fitting status
 code (`400` invalid topic, `401` not logged in, `404` not found or not yours,
-`409` a research is already running, `429` daily limit reached).
+`403` not allowed for the demo account, `409` a research is already running,
+`429` daily limit or request limit reached).
 
 ## Data
 

@@ -1,5 +1,6 @@
 import { Research, ACTIVE_STATUSES, MIN_POSTS } from '../models/research.model.js';
 import { collectPosts } from '../sources/index.js';
+import { validDate } from '../sources/clean.js';
 import { summariseSentiment } from '../analysis/sentiment.js';
 import { monthlyVolume } from '../analysis/volume.js';
 import { topPosts } from '../analysis/sample.js';
@@ -9,10 +10,12 @@ const TOO_FEW_POSTS = 'Not enough public discussion found for this topic. Try a 
 const GENERAL_FAILURE = 'Something went wrong while running this research. Please try again.';
 const INTERRUPTED = 'Interrupted, please run it again';
 
-const setStage = (id, stage) => Research.updateOne({ _id: id }, { $set: { stage } });
+// Both only touch a research that is still running. If it was marked as interrupted in
+// the meantime, that outcome stands and this job's result is dropped.
+const setStage = (id, stage) => Research.updateOne({ _id: id, status: 'running' }, { $set: { stage } });
 
 const finish = (id, changes) =>
-    Research.updateOne({ _id: id }, { $set: { ...changes, finishedAt: new Date() }, $unset: { stage: 1 } });
+    Research.updateOne({ _id: id, status: 'running' }, { $set: { ...changes, finishedAt: new Date() }, $unset: { stage: 1 } });
 
 // the model is one outside service among several; without it the computed parts still stand
 const tryToWrite = async (write, topic, posts) => {
@@ -31,7 +34,10 @@ const evidenceFor = (posts, insights, topIds) => {
         : [];
     const wanted = new Set([...cited, ...topIds]);
 
-    return posts.filter((post) => wanted.has(post.id));
+    // a date the database cannot store would fail the whole research
+    return posts
+        .filter((post) => wanted.has(post.id))
+        .map((post) => ({ ...post, createdAt: validDate(post.createdAt) }));
 };
 
 // Runs one queued research from start to finish and saves the outcome. It is started

@@ -342,3 +342,38 @@ describe('deleting', () => {
         expect((await agent.get(`${api}/meta`)).body.data.remaining).toBe(4);
     });
 });
+
+describe('review fixes', () => {
+    test('attempts are capped too, so failed researches cannot be repeated without end', async () => {
+        const { user, agent } = await login();
+        for (let i = 0; i < 15; i += 1) await stored(user, { status: 'failed', error: 'Earlier failure' });
+
+        const meta = await agent.get(`${api}/meta`);
+        const res = await agent.post(api).send({ topic: 'standing desks' });
+
+        expect(meta.body.data.remaining).toBe(0);
+        expect(res.status).toBe(429);
+        expect(res.body.message).toBe('Too many attempts today. Try again tomorrow.');
+        expect(runResearch).not.toHaveBeenCalled();
+    });
+
+    test('14 failed attempts still leave room for one more', async () => {
+        const { user, agent } = await login();
+        for (let i = 0; i < 14; i += 1) await stored(user, { status: 'failed', error: 'Earlier failure' });
+
+        expect((await agent.get(`${api}/meta`)).body.data.remaining).toBe(1);
+        expect((await agent.post(api).send({ topic: 'standing desks' })).status).toBe(202);
+    });
+
+    test('the demo account cannot delete its reports', async () => {
+        const user = await createVerifiedUser({ isDemo: true });
+        const agent = await loginAgent(user);
+        const research = await stored(user, { topic: 'kept for every visitor' });
+
+        const res = await agent.delete(`${api}/${research._id}`);
+
+        expect(res.status).toBe(403);
+        expect(res.body.message).toBe("The demo account's reports cannot be deleted.");
+        expect((await Research.findById(research._id)).topic).toBe('kept for every visitor');
+    });
+});

@@ -210,3 +210,34 @@ describe('failInterrupted', () => {
         expect((await Research.findById(failed._id)).error).toBe('Earlier failure');
     });
 });
+
+describe('review fixes', () => {
+    test('a research that was marked interrupted is not overwritten when its job finishes', async () => {
+        const research = await newResearch();
+        const collect = async () => {
+            // the server restarts elsewhere while this job is still collecting
+            await failInterrupted();
+            return collected(makePosts(20));
+        };
+
+        await runResearch(research._id, { collect, write: async () => insightsCiting(['youtube:1']) });
+
+        const saved = await Research.findById(research._id);
+        expect(saved.status).toBe('failed');
+        expect(saved.error).toBe('Interrupted, please run it again');
+        expect(saved.report).toBeUndefined();
+    });
+
+    test('a post without a usable date does not fail the research', async () => {
+        const research = await newResearch();
+        const posts = makePosts(20);
+        posts[19].createdAt = new Date('not a date');
+        posts[18].createdAt = null;
+
+        await runResearch(research._id, { collect: async () => collected(posts), write: async () => insightsCiting(['youtube:19']) });
+
+        const saved = await Research.findById(research._id);
+        expect(saved.status).toBe('done');
+        expect(saved.report.evidence.find((post) => post.id === 'youtube:19').createdAt).toBeNull();
+    });
+});
