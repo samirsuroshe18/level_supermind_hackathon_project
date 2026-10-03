@@ -133,11 +133,11 @@ user and only ever return that user's researches.
 |---|---|
 | `POST /users/register`, `POST /users/login`, `GET /users/logout`, `GET /users/me` | Accounts |
 | `POST /users/forgot-password`, `GET /verify/verify-email`, `GET /verify/reset-password`, `POST /verify/verify-password` | Email links: verify the address, check a reset link, set the new password |
-| `GET /research/meta` | Enabled sources, daily limit, researches left today |
+| `GET /research/meta` | Enabled sources, daily limit, researches left today, longest topic allowed |
 | `POST /research` | Start a research; `202` with its id |
 | `GET /research` | The user's researches, newest first, without report bodies |
 | `GET /research/:id` | Status, stage and, when done, the report |
-| `DELETE /research/:id` | Delete one research |
+| `DELETE /research/:id` | Delete one research. Its content is removed; it still counts towards the day it was started |
 
 Errors use one shape: `{ success: false, message }` with a fitting status
 code (`400` invalid topic, `401` not logged in, `404` not found or not yours,
