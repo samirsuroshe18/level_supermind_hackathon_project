@@ -1,24 +1,31 @@
+const token = (name) => `rgb(var(--${name}) / <alpha-value>)`;
+
 /** @type {import('tailwindcss').Config} */
-module.exports = {
-  content: ["./src/**/*.{js,jsx,ts,tsx}"],
+export default {
+  content: ["./index.html", "./src/**/*.{js,jsx}"],
+  darkMode: 'class',
   theme: {
     extend: {
+      // every colour is a CSS variable, defined for both themes in src/index.css
       colors: {
-        gray: {
-          800: "#1e1e2c",
-        },
-        dark: {
-          900: "#111827",
-          800: "#1E293B",
-          700: "#374151",
-        },
-        blue: {
-          500: "#3B82F6",
-          400: "#60A5FA",
-        },
-        purple: {
-          900: "#1a132b",
-        },
+        bg: token('bg'),
+        surface: token('surface'),
+        soft: token('soft'),
+        ink: token('text'),
+        muted: token('muted'),
+        line: token('border'),
+        accent: token('accent'),
+        'accent-ink': token('accent-ink'),
+        positive: token('positive'),
+        neutral: token('neutral'),
+        negative: token('negative'),
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Fraunces', 'Georgia', 'serif'],
+      },
+      maxWidth: {
+        page: '68rem',
       },
     },
   },
