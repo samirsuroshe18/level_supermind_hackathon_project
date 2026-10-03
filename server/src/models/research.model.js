@@ -36,7 +36,6 @@ const researchSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: 'User',
         required: true,
-        index: true,
     },
 
     topic: {
@@ -66,6 +65,19 @@ const researchSchema = new Schema({
     report: reportSchema,
     finishedAt: Date,
 
+    // a deleted research is emptied but kept, so it still counts towards its day
+    deletedAt: Date,
+
 }, { timestamps: true });
+
+// a user can have one research in progress; the database refuses a second one even
+// when two requests arrive at the same moment
+researchSchema.index(
+    { user: 1 },
+    { name: 'one_active_per_user', unique: true, partialFilterExpression: { status: { $in: ACTIVE_STATUSES } } }
+);
+
+// the history list and the daily count both read one user's researches by date
+researchSchema.index({ user: 1, createdAt: -1 });
 
 export const Research = mongoose.model("Research", researchSchema);
