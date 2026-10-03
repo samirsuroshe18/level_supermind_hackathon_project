@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://advise-api.onrender.com/api/:path*"
+      "destination": "https://level-supermind-hackathon-project.onrender.com/api/:path*"
     },
     {
       "source": "/(.*)",
