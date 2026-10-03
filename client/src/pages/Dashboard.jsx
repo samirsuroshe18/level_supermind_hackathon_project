@@ -66,7 +66,8 @@ const Dashboard = () => {
 
       <h2 className="mb-4 mt-10 text-xl font-semibold">Your research</h2>
       {researches === null && !error && <Spinner />}
-      {researches !== null && <HistoryList researches={researches} onDelete={handleDelete} />}
+      {/* the demo account's reports are shared by every visitor, so they stay */}
+      {researches !== null && <HistoryList researches={researches} onDelete={user.isDemo ? undefined : handleDelete} />}
     </div>
   );
 };

@@ -71,7 +71,7 @@ The project started at the Level SuperMind hackathon in January 2025.
    it is done.
 
 A user can run five researches a day, one at a time. Failed researches do not
-count. See [docs/design.md](docs/design.md) for the details.
+count, up to fifteen attempts a day. See [docs/design.md](docs/design.md) for the details.
 
 ## Tech stack
 
@@ -156,7 +156,8 @@ npm run seed
 
 This creates the account `demo@advise.demo` with the password `Demo@123` and
 runs three real researches for it, so it calls the sources and the language
-model. The login page has a button for this account. Running the script again
+model. The login page has a button for this account. Its reports cannot be
+deleted, so every visitor finds them. Running the script again
 replaces the account and its reports and touches nothing else.
 
 ### Tests

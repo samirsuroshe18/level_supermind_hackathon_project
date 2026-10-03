@@ -332,3 +332,42 @@ describe('sessions', () => {
         expect(res.body.data.user).not.toHaveProperty('tokenVersion');
     });
 });
+
+describe('demo account', () => {
+    const cookieOf = (res) => res.headers['set-cookie'].map((cookie) => cookie.split(';')[0]).join('; ');
+    const me = (cookie) => request(app).get(`${api}/users/me`).set('Cookie', cookie);
+
+    test('me says whether the account is the demo account', async () => {
+        const demo = await loginAgent(await createVerifiedUser({ isDemo: true }));
+        const regular = await loginAgent(await createVerifiedUser());
+
+        expect((await demo.get(`${api}/users/me`)).body.data.user.isDemo).toBe(true);
+        expect((await regular.get(`${api}/users/me`)).body.data.user.isDemo).toBe(false);
+    });
+
+    test('one visitor logging out does not sign out the other visitors', async () => {
+        const user = await createVerifiedUser({ isDemo: true });
+        const first = cookieOf(await login({ email: user.email, password: 'secret12' }));
+        const second = cookieOf(await login({ email: user.email, password: 'secret12' }));
+
+        const out = await request(app).get(`${api}/users/logout`).set('Cookie', first);
+
+        expect(out.status).toBe(200);
+        expect(out.headers['set-cookie'].join(';')).toContain('accessToken=;');
+        expect((await me(second)).status).toBe(200);
+    });
+
+    test('its password cannot be reset by a visitor', async () => {
+        const user = await createVerifiedUser({ isDemo: true });
+
+        const res = await request(app).post(`${api}/users/forgot-password`).send({ email: user.email });
+
+        expect(res.status).toBe(200);
+        expect((await User.findById(user._id)).forgotPasswordToken).toBeUndefined();
+    });
+
+    test('isDemo cannot be set at sign-up', async () => {
+        await register({ ...validSignup, isDemo: true });
+        expect((await User.findOne({ email: 'asha@example.com' })).isDemo).toBe(false);
+    });
+});

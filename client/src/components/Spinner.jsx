@@ -3,9 +3,10 @@ const Spinner = ({ label = 'Loading', className = '' }) => (
 );
 
 // Fills the page while the app finds out who is logged in
-export const PageSpinner = () => (
-  <div className="flex min-h-dvh items-center justify-center">
+export const PageSpinner = ({ message }) => (
+  <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-4 text-center">
     <Spinner className="h-8 w-8" />
+    {message && <p className="max-w-xs text-sm text-muted">{message}</p>}
   </div>
 );
 
