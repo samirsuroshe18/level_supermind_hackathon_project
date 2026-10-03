@@ -1,16 +1,10 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import AuthCard from '../components/AuthCard';
+import Button from '../components/Button';
 
-const NotFound = () => {
-  return (
-    <div style={{ textAlign: "center", padding: "50px" }}>
-      <h1>404 - Page Not Found</h1>
-      <p>Oops! The page you're looking for doesn't exist.</p>
-      <Link to="/" style={{ color: "blue", textDecoration: "underline" }}>
-        Go Back to Home
-      </Link>
-    </div>
-  );
-};
+const NotFound = () => (
+  <AuthCard title="Page not found" subtitle="The address may be mistyped, or the page may have moved.">
+    <Button to="/" className="w-full">Back to the start</Button>
+  </AuthCard>
+);
 
 export default NotFound;

@@ -1,8 +1,40 @@
-import asyncHandler from '../utils/customAsyncHandler.js';
+import asyncHandler from '../utils/asynchandler.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 import { User } from '../models/user.model.js';
 import mailSender from '../utils/mailSender.js';
+import { endSessions } from '../utils/sessions.js';
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const MIN_PASSWORD_LENGTH = 6;
+const NAME_MAX = 80;
+const DUPLICATE_KEY = 11000;
+
+// the cookie must only require https in production, otherwise it is dropped on http://localhost
+const cookieOptions = () => ({
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+});
+
+const normalizeEmail = (email) => (typeof email === 'string' ? email.trim().toLowerCase() : '');
+
+// Reads the name from a request body; anything but text is refused
+const readName = (value) => {
+    if (value === undefined || value === null) return '';
+
+    if (typeof value !== 'string') {
+        throw new ApiError(400, "Name must be text");
+    }
+
+    const name = value.trim();
+
+    if (name.length > NAME_MAX) {
+        throw new ApiError(400, `Name must be at most ${NAME_MAX} characters`);
+    }
+
+    return name;
+};
 
 const generateAccessAndRefreshToken = async (userId) => {
     try {
@@ -11,150 +43,140 @@ const generateAccessAndRefreshToken = async (userId) => {
         const refreshToken = user.generateRefreshToken();
 
         user.refreshToken = refreshToken;
-
-        // when we use save() method is used then all the fields are neccesary so to avoid that we have to pass an object with property {validatBeforeSave:false}
         await user.save({ validateBeforeSave: false });
 
         return { accessToken, refreshToken }
     } catch (error) {
         throw new ApiError(500, "Something went wrong while generating refresh and access token");
     }
-};
+}
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { name, email, password } = req.body;
+    const { password } = req.body;
+    const userName = readName(req.body.userName);
+    const email = normalizeEmail(req.body.email);
 
-    if (!name?.trim() || !email?.trim() || !password?.trim()) {
-        throw new ApiError(400, "All fields are required");
+    if (!userName || !email || !password) {
+        throw new ApiError(400, "Name, email and password are required");
+    }
+
+    if (!EMAIL_PATTERN.test(email)) {
+        throw new ApiError(400, "Enter a valid email address");
+    }
+
+    if (typeof password !== 'string' || password.length < MIN_PASSWORD_LENGTH) {
+        throw new ApiError(400, "Password must be at least 6 characters");
     }
 
     const existedUser = await User.findOne({ email });
 
     if (existedUser) {
-        throw new ApiError(409, 'User with same email already exists');
+        throw new ApiError(409, 'An account with this email already exists');
     }
 
-    const user = await User.create({
-        email,
-        password,
-        name,
-    });
-
-    const createdUser = await User.findById(user._id);
-
-    if (!createdUser) {
-        throw new ApiError(500, "Something went wrong");
+    let user;
+    try {
+        user = await User.create({ userName, email, password });
+    } catch (error) {
+        // two sign-ups can pass the check above at the same moment; the unique index decides
+        if (error.code === DUPLICATE_KEY) {
+            throw new ApiError(409, 'An account with this email already exists');
+        }
+        throw error;
     }
 
-    const mailResponse = await mailSender(email, createdUser._id, "VERIFY");
+    const mailResponse = await mailSender(email, user._id, "VERIFY");
 
-    if (mailResponse) {
-        return res.status(200).json(
-            new ApiResponse(200, {}, "An email sent to your account please verify in 10 minutes")
-        );
+    if (!mailResponse) {
+        // logging in with an unverified account sends a fresh link
+        throw new ApiError(500, "Account created, but the verification email could not be sent. Log in to get a new link.");
     }
 
-    throw new ApiError(500, "Something went wrong!! An email couldn't sent to your account");
+    return res.status(201).json(
+        new ApiResponse(201, {}, "Verification email sent. Please verify within 10 minutes.")
+    );
 });
 
 const loginUser = asyncHandler(async (req, res) => {
-    const { email, password } = req.body;
+    const email = normalizeEmail(req.body.email);
+    const { password } = req.body;
 
-    if (!email && !password) {
-        throw new ApiError(400, "All fields are required");
+    if (!email || !password) {
+        throw new ApiError(400, "Email and password are required");
     }
 
     const user = await User.findOne({ email });
 
-    if (!user || !user?.password || user?.isGoogleVerified) {
-        throw new ApiError(404, "Invalid credential");
+    // the same answer for an unknown email and a wrong password, so accounts cannot be probed
+    if (!user || !(await user.isPasswordCorrect(String(password)))) {
+        throw new ApiError(401, "Invalid email or password");
     }
 
-    // you cant access isPasswordCorrect method directly through 'User' beacause User is mogoose object 
-    // these methods is applied only the instance of the user when mongoose return its instance
-    // you can acces User.findOne() but you cant access User.isPasswordCorrect()
-    const isPasswordValid = await user.isPasswordCorrect(password);
-
-    if (!isPasswordValid) {
-        throw new ApiError(401, "Invalid user credential");
-    }
-
-    if (!user?.isVerified) {
+    if (!user.isVerified) {
         const mailResponse = await mailSender(email, user._id, "VERIFY");
 
-        if (mailResponse) {
-            throw new ApiError(310, "Your email is not verified. An email sent to your account please verify in 10 minutes");
+        if (!mailResponse) {
+            throw new ApiError(500, "Email not verified, and a new verification link could not be sent. Please try again later.");
         }
+
+        throw new ApiError(403, "Email not verified. A new verification link has been sent.");
     }
 
     const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
 
-    //option object is created beacause we dont want to modified the cookie to front side
-    const option = {
-        httpOnly: 'true' === process.env.HTTP_ONLY,
-        secure: 'true' === process.env.COOKIE_SECURE,
-        maxAge: Number(process.env.COOKIE_MAX_AGE),
-    }
+    const loggedInUser = await User.findById(user._id);
 
-    return res.status(200).cookie('accessToken', accessToken, option).cookie('refreshToken', refreshToken, option).json(
-        new ApiResponse(200, { user, accessToken, refreshToken }, "User logged in sucessully")
-    );
+    return res.status(200)
+        .cookie('accessToken', accessToken, cookieOptions())
+        .cookie('refreshToken', refreshToken, cookieOptions())
+        .json(new ApiResponse(200, { user: loggedInUser }, "Logged in"));
 });
 
 const logoutUser = asyncHandler(async (req, res) => {
 
-    return res.status(200).clearCookie('accessToken').status(200).json(
-        new ApiResponse(200, req.user, "User logged out successfully")
-    );
-});
-
-const changeCurrentPassword = asyncHandler(async (req, res) => {
-    const { oldPassword, newPassword } = req.body;
-
-    const user = await User.findById(req.user._id);
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
-
-    if (!isPasswordCorrect) {
-        throw new ApiError(400, "Password is incorrect");
+    // the demo account is used by many visitors at once; one of them leaving must not
+    // sign out the others, so only this browser's cookies are cleared
+    if (!req.user.isDemo) {
+        await endSessions(req.user._id);
     }
 
-    user.password = newPassword;
-    await user.save({ validateBeforeSave: false });
+    return res.status(200)
+        .clearCookie("accessToken", cookieOptions())
+        .clearCookie("refreshToken", cookieOptions())
+        .json(new ApiResponse(200, {}, "Logged out"));
+});
 
-    return res.status(200).json(new ApiResponse(200, {}, "Password changed successfully"));
+const getMe = asyncHandler(async (req, res) => {
+    return res.status(200).json(
+        new ApiResponse(200, { user: req.user }, "Current user")
+    );
 });
 
 const forgotPassword = asyncHandler(async (req, res) => {
-    const { email } = req.body;
+    const email = normalizeEmail(req.body.email);
+
+    if (!email) {
+        throw new ApiError(400, "Email is required");
+    }
 
     const user = await User.findOne({ email });
 
-    if (!user || !user?.isVerified) {
-        throw new ApiError(404, "Invalid email or email is not verified");
+    // the demo account has no mailbox, and its password must stay the published one
+    if (user && !user.isDemo) {
+        await mailSender(email, user._id, "RESET");
     }
 
-    const mailResponse = await mailSender(email, user._id, "RESET");
-
-    if (mailResponse) {
-        return res.status(200).json(
-            new ApiResponse(200, {}, "An email sent to your account please reset your password in 10 minutes")
-        );
-    }
-
-    throw new ApiError(500, "Something went wrong!! An email couldn't sent to your account");
-});
-
-const getCurrentUser = asyncHandler(async (req, res) => {
+    // the same answer either way, so the form cannot be used to find registered emails
     return res.status(200).json(
-        new ApiResponse(200, req.user, "User session is Active")
+        new ApiResponse(200, {}, "If that email is registered, a reset link has been sent.")
     );
 });
+
 
 export {
     registerUser,
     loginUser,
     logoutUser,
-    changeCurrentPassword,
-    forgotPassword,
-    getCurrentUser,
+    getMe,
+    forgotPassword
 }
