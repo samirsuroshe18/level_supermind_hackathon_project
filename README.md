@@ -235,7 +235,7 @@ return that user's researches.
 
 ## Team
 
-Built by Mohit Dhangar ([@mohit45v](https://github.com/mohit45v)),
-Tanishq Kulkarni ([@TanishqMSD](https://github.com/TanishqMSD)),
-Samir Suroshe ([@samirsuroshe18](https://github.com/samirsuroshe18)) and
+Built by Samir Suroshe ([@samirsuroshe18](https://github.com/samirsuroshe18)),
+Mohit Dhangar ([@mohit45v](https://github.com/mohit45v)),
+Tanishq Kulkarni ([@TanishqMSD](https://github.com/TanishqMSD)) and
 Pranay Sanap ([@pranaysanap](https://github.com/pranaysanap)).
