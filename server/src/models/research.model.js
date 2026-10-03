@@ -21,7 +21,8 @@ const postSchema = new Schema({
 const reportSchema = new Schema({
     // { overall: { positive, neutral, negative }, bySource: { <source>: { ... } } }
     sentiment: Schema.Types.Mixed,
-    volume: [new Schema({ weekStart: String, count: Number }, subdocument)],
+    // posts per month for the last 12 months
+    volume: [new Schema({ month: String, count: Number }, subdocument)],
     // ids of the highest-scored posts of each source
     topPosts: [String],
     // absent when the language model could not be reached

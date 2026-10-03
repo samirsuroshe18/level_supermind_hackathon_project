@@ -1,5 +1,5 @@
 import { classify, summariseSentiment } from '../src/analysis/sentiment.js';
-import { weeklyVolume } from '../src/analysis/volume.js';
+import { monthlyVolume } from '../src/analysis/volume.js';
 import { topPosts, samplePosts } from '../src/analysis/sample.js';
 
 let counter = 0;
@@ -54,44 +54,52 @@ describe('sentiment', () => {
     });
 });
 
-describe('weekly volume', () => {
-    // a Wednesday; its week starts on Monday 5 October
+describe('monthly volume', () => {
     const now = new Date('2026-10-07T12:00:00Z');
 
-    test('gives 12 weeks, oldest first, ending with the current week', () => {
-        const volume = weeklyVolume([], now);
+    test('gives 12 months, oldest first, ending with the current month', () => {
+        const volume = monthlyVolume([], now);
 
         expect(volume).toHaveLength(12);
-        expect(volume[11]).toEqual({ weekStart: '2026-10-05', count: 0 });
-        expect(volume[10].weekStart).toBe('2026-09-28');
-        expect(volume[0].weekStart).toBe('2026-07-20');
-        expect(volume.every((week) => week.count === 0)).toBe(true);
+        expect(volume[11]).toEqual({ month: '2026-10', count: 0 });
+        expect(volume[10].month).toBe('2026-09');
+        expect(volume[2].month).toBe('2026-01');
+        expect(volume[0].month).toBe('2025-11');
+        expect(volume.every((entry) => entry.count === 0)).toBe(true);
     });
 
-    test('counts each post in the week it was written, weeks starting on Monday', () => {
+    test('counts each post in the month it was written, by UTC date', () => {
         const posts = [
-            post({ createdAt: new Date('2026-10-05T00:00:00Z') }),
+            post({ createdAt: new Date('2026-10-01T00:00:00Z') }),
             post({ createdAt: new Date('2026-10-07T09:00:00Z') }),
-            post({ createdAt: new Date('2026-10-04T23:59:59Z') }),
-            post({ createdAt: new Date('2026-07-20T00:00:00Z') }),
+            post({ createdAt: new Date('2026-09-30T23:59:59Z') }),
+            post({ createdAt: new Date('2025-11-01T00:00:00Z') }),
         ];
 
-        const volume = weeklyVolume(posts, now);
+        const volume = monthlyVolume(posts, now);
 
         expect(volume[11].count).toBe(2);
         expect(volume[10].count).toBe(1);
         expect(volume[0].count).toBe(1);
     });
 
-    test('ignores posts older than 12 weeks, in the future or without a valid date', () => {
+    test('ignores posts older than 12 months, in the future or without a valid date', () => {
         const posts = [
-            post({ createdAt: new Date('2026-07-19T23:59:59Z') }),
-            post({ createdAt: new Date('2026-10-20T00:00:00Z') }),
+            post({ createdAt: new Date('2025-10-31T23:59:59Z') }),
+            post({ createdAt: new Date('2026-11-01T00:00:00Z') }),
             post({ createdAt: new Date('not a date') }),
             post({ createdAt: undefined }),
         ];
 
-        expect(weeklyVolume(posts, now).reduce((sum, week) => sum + week.count, 0)).toBe(0);
+        expect(monthlyVolume(posts, now).reduce((sum, entry) => sum + entry.count, 0)).toBe(0);
+    });
+
+    test('works across a year boundary in January', () => {
+        const volume = monthlyVolume([], new Date('2026-01-15T00:00:00Z'));
+
+        expect(volume[11].month).toBe('2026-01');
+        expect(volume[10].month).toBe('2025-12');
+        expect(volume[0].month).toBe('2025-02');
     });
 });
 

@@ -117,6 +117,16 @@ describe('hacker news', () => {
         expect(url.searchParams.get('hitsPerPage')).toBe('100');
     });
 
+    test('only asks for posts of the last 24 months', async () => {
+        const fetchFn = fakeFetch({ [HN_SEARCH]: { body: hackerNewsSearch } });
+        const now = new Date('2026-10-07T12:00:00Z');
+
+        await hackerNews.collect('standing desks', { fetchFn, now });
+
+        const filter = new URL(fetchFn.calls[0].url).searchParams.get('numericFilters');
+        expect(filter).toBe(`created_at_i>${Date.UTC(2024, 9, 7, 12) / 1000}`);
+    });
+
     test('returns no posts when the response has no hits', async () => {
         const posts = await hackerNews.collect('nothing', { fetchFn: fakeFetch({ [HN_SEARCH]: { body: {} } }) });
         expect(posts).toEqual([]);

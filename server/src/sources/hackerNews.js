@@ -2,6 +2,8 @@ import { withQuery, getJson } from './http.js';
 
 const API = 'https://hn.algolia.com/api/v1/search';
 const MAX_HITS = 100;
+// the search ranks by relevance over all time; older discussion says little about today
+const MAX_AGE_YEARS = 2;
 
 const ENTITIES = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#x27;': "'", '&#39;': "'", '&#x2F;': '/' };
 
@@ -32,9 +34,17 @@ const toPost = (hit) => {
     };
 };
 
-// Stories and comments that match the topic
-const collect = async (topic, { fetchFn = fetch, signal } = {}) => {
-    const url = withQuery(API, { query: topic, tags: '(story,comment)', hitsPerPage: MAX_HITS });
+// Recent stories and comments that match the topic
+const collect = async (topic, { fetchFn = fetch, signal, now = new Date() } = {}) => {
+    const oldest = new Date(now);
+    oldest.setUTCFullYear(oldest.getUTCFullYear() - MAX_AGE_YEARS);
+
+    const url = withQuery(API, {
+        query: topic,
+        tags: '(story,comment)',
+        hitsPerPage: MAX_HITS,
+        numericFilters: `created_at_i>${Math.floor(oldest.getTime() / 1000)}`,
+    });
     const data = await getJson(fetchFn, url, { signal }, 'Hacker News');
 
     return (data.hits || []).map(toPost).filter(Boolean);

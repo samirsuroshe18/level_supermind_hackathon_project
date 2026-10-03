@@ -61,7 +61,7 @@ list of posts in a common shape.
 | Source | API | Credentials | What is collected |
 |---|---|---|---|
 | YouTube | YouTube Data API v3 | `YOUTUBE_API_KEY` | Top 5 videos for the topic, up to 40 top-level comments each |
-| Hacker News | Algolia HN Search | none | Up to 100 stories and comments matching the topic |
+| Hacker News | Algolia HN Search | none | Up to 100 stories and comments matching the topic, from the last 24 months |
 | Reddit | Reddit OAuth API | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | Up to 50 posts matching the topic, and up to 10 top comments from each of the 5 highest-scored posts |
 
 Rules that apply to all sources:
@@ -83,7 +83,7 @@ Rules that apply to all sources:
 - **Sentiment**: each post is scored with a word-list scorer and classed as
   positive, neutral or negative. The report shows the split overall and per
   source.
-- **Volume over time**: posts are counted per week for the last 12 weeks.
+- **Volume over time**: posts are counted per month for the last 12 months.
 - **Top posts**: the highest-scored posts per source, shown as evidence.
 
 **Written by the language model** (Gemini), from a sample of at most 120
@@ -149,7 +149,7 @@ code (`400` invalid topic, `401` not logged in, `404` not found or not yours,
 tokens, session version.
 
 **Research**: owner, topic, status, stage, error message, timestamps, the
-sources used and skipped, post counts, and the report: sentiment, weekly
+sources used and skipped, post counts, and the report: sentiment, monthly
 volume, summary, pain points, wishes, competitors, hooks, calls to action and
 the posts referenced as evidence. Posts that are not referenced by the report
 are not stored.

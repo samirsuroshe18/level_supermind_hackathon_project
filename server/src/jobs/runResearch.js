@@ -1,7 +1,7 @@
 import { Research, ACTIVE_STATUSES, MIN_POSTS } from '../models/research.model.js';
 import { collectPosts } from '../sources/index.js';
 import { summariseSentiment } from '../analysis/sentiment.js';
-import { weeklyVolume } from '../analysis/volume.js';
+import { monthlyVolume } from '../analysis/volume.js';
 import { topPosts } from '../analysis/sample.js';
 import { writeInsights } from '../analysis/insights.js';
 
@@ -57,7 +57,7 @@ const runResearch = async (researchId, { collect = collectPosts, write = writeIn
 
         await setStage(researchId, 'analysing');
         const sentiment = summariseSentiment(posts);
-        const volume = weeklyVolume(posts);
+        const volume = monthlyVolume(posts);
         const topIds = topPosts(posts).map((post) => post.id);
 
         await setStage(researchId, 'writing');
