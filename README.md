@@ -114,8 +114,8 @@ count, up to fifteen attempts a day. See [docs/design.md](docs/design.md) for th
 ### Setup
 
 ```bash
-git clone https://github.com/samirsuroshe18/level_supermind_hackathon_project.git
-cd level_supermind_hackathon_project
+git clone https://github.com/samirsuroshe18/advise.git
+cd advise
 
 cd server
 npm install
@@ -255,5 +255,9 @@ return that user's researches.
 
 Built by Samir Suroshe ([@samirsuroshe18](https://github.com/samirsuroshe18)),
 Mohit Dhangar ([@mohit45v](https://github.com/mohit45v)),
-Tanishq Kulkarni ([@TanishqMSD](https://github.com/TanishqMSD)) and
+Tanishq Kulkarni ([@tanishqbuilds](https://github.com/tanishqbuilds)) and
 Pranay Sanap ([@pranaysanap](https://github.com/pranaysanap)).
+
+## License
+
+[MIT](LICENSE)

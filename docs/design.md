@@ -177,15 +177,6 @@ themes, usable on a phone.
 | Report | Progress while running; then summary, sentiment chart, volume chart, pain points and wishes with quotes and links, competitors, hooks and calls to action with copy buttons, sources used |
 | Team | The hackathon team |
 
-## What is removed
-
-The hackathon code carried pieces from other projects and services that are
-no longer used. They are deleted: Firecrawl and page scraping, Astra DB and
-Langflow, browser automation, Google sign-in, server-rendered email views that
-are replaced, payment and "tokenized assets" pages, the hardcoded dashboard
-data, and the 3D and particle libraries. Stray output files and the database
-bundle in `server/` are removed from the repository.
-
 ## Project structure
 
 ```
