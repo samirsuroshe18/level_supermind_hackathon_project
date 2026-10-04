@@ -99,7 +99,7 @@ const Landing = () => {
       <footer className="border-t border-line">
         <div className="mx-auto flex max-w-page flex-wrap items-center justify-between gap-3 px-4 py-6 text-sm text-muted">
           <p>Started at the Level SuperMind hackathon, January 2025.</p>
-          <a href="https://github.com/samirsuroshe18/level_supermind_hackathon_project" target="_blank" rel="noopener noreferrer" className="font-medium hover:text-accent">
+          <a href="https://github.com/samirsuroshe18/advise" target="_blank" rel="noopener noreferrer" className="font-medium hover:text-accent">
             Source on GitHub
           </a>
         </div>
